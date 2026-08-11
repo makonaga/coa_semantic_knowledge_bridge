@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
-# Phase 0: COA デプロイ前の環境チェック(us-east-1 前提)
+# Phase 0: COA デプロイ前の環境チェック(メインリージョン: us-west-2)
 #
 # 使い方:
 #   AWS 認証済みのターミナルで:  bash scripts/phase0-check.sh
 #   プロファイル指定する場合:    AWS_PROFILE=myprofile bash scripts/phase0-check.sh
+#   リージョン変更:              COA_REGION=us-east-1 bash scripts/phase0-check.sh
+#
+# 注意: COA の CloudFront 用 WAF スタック(EdgeWafStack)は AWS の仕様上
+# 必ず us-east-1 に作られる(infra/bin/app.ts:404)。そのため CDK bootstrap は
+# メインリージョンと us-east-1 の両方で必要。
 #
 # 各チェックは PASS / WARN / FAIL を表示する。FAIL が残った状態で
 # Phase 2 (make deploy-dev) に進んではいけない。
 
 set -uo pipefail
 
-REGION="us-east-1"
+REGION="${COA_REGION:-us-west-2}"
+WAF_REGION="us-east-1"
 PASS=0; WARN=0; FAIL=0
 
 ok()   { printf '  [PASS] %s\n' "$1"; PASS=$((PASS+1)); }
@@ -45,15 +51,17 @@ echo "        smus_admin_principal_arns に設定する(user/role の ARN のみ
 
 # ---------------------------------------------------------------------------
 echo
-echo "--- 0-2. CDK bootstrap 確認 ---"
-if aws ssm get-parameter --name /cdk-bootstrap/hnb659fds/version \
-     --region "$REGION" --query Parameter.Value --output text >/dev/null 2>&1; then
-  VER=$(aws ssm get-parameter --name /cdk-bootstrap/hnb659fds/version \
-          --region "$REGION" --query Parameter.Value --output text)
-  ok "CDK bootstrap 済み (version: $VER)"
-else
-  ng "CDK bootstrap 未実施。対処: npx cdk bootstrap aws://$ACCOUNT_ID/$REGION (Node 22+ が必要)"
-fi
+echo "--- 0-2. CDK bootstrap 確認(メイン: $REGION / CloudFront WAF 用: $WAF_REGION)---"
+BOOTSTRAP_REGIONS="$REGION"
+[ "$REGION" != "$WAF_REGION" ] && BOOTSTRAP_REGIONS="$REGION $WAF_REGION"
+for R in $BOOTSTRAP_REGIONS; do
+  if VER=$(aws ssm get-parameter --name /cdk-bootstrap/hnb659fds/version \
+             --region "$R" --query Parameter.Value --output text 2>/dev/null); then
+    ok "CDK bootstrap 済み ($R, version: $VER)"
+  else
+    ng "CDK bootstrap 未実施 ($R)。対処: npx cdk bootstrap aws://$ACCOUNT_ID/$R (Node 22+ が必要)"
+  fi
+done
 
 # ---------------------------------------------------------------------------
 echo
