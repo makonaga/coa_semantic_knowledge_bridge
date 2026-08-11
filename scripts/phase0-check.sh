@@ -2,9 +2,9 @@
 # Phase 0: COA デプロイ前の環境チェック(メインリージョン: us-west-2)
 #
 # 使い方:
-#   AWS 認証済みのターミナルで:  bash scripts/phase0-check.sh
-#   プロファイル指定する場合:    AWS_PROFILE=myprofile bash scripts/phase0-check.sh
-#   リージョン変更:              COA_REGION=us-east-1 bash scripts/phase0-check.sh
+#   bash scripts/phase0-check.sh
+#   (事前に aws configure で認証設定済みであること。aws sts get-caller-identity が
+#    アカウント情報を返せば準備OK)
 #
 # 注意: COA の CloudFront 用 WAF スタック(EdgeWafStack)は AWS の仕様上
 # 必ず us-east-1 に作られる(infra/bin/app.ts:404)。そのため CDK bootstrap は
