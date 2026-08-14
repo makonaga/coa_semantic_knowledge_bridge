@@ -51,15 +51,21 @@ namespace: `change-mgmt`(ID: 7c1ba4c7-39c6-414e-be5e-307208a01b34)
 > Synonym への日本語登録で Tier 1 が発火する。ただしマッチは語そのものの入力に限られ、
 > 文章に埋め込むと Tier 2 へ落ちる(値は正しいが確定的実行ではなくなる)。
 
-### Tier 3(GraphRAG): ルーター経由では発火せず(重要知見)
+### Tier 3(GraphRAG): 今回の検証ではルーター経由で発火せず(評価は Phase 4 で確定)
 
-- 表と文書に同内容を入れたテストデータでは、**Standard モードのルーターは常に Tier 2 を選択**。
-- 規程文書(表に無い知識)への質問でも、カラム語彙を含むと Tier 2 に吸われ、
-  語彙を変えても SPARQL→Ontop→SQL 経路で 0行 → **SQL 再生成リトライ**(confidence 18% に減点)となり、
-  **Tier 3 へのフォールバックは発生しない**(v0.1.0 の Standard モード仕様)。
+- **観測事実**: 表と文書に同内容を入れた本テストデータでは、Standard モードの全質問が Tier 2 で解決された。
+  規程文書(表に無い知識)への質問でも、SPARQL→Ontop→SQL 経路で 0行 → SQL 再生成リトライ
+  (confidence 18% に減点)となり、Tier 3 には到達しなかった。
+- **コード裏取り**(orchestrator.py): Tier 3 は「**Tier 2 が結果を返さなかった場合のフォールバック**」として
+  実装されている。今回は Tier 2 が「0行」という*結果*を返したためフォールバック条件を満たさなかった。
+  つまり「Tier 3 が動かない」のではなく「**0行でも Tier 2 の成功と扱われ、Tier 3 到達を塞ぐ**」が正確な因果
+  (記事の言う“見かけ上正常な NULL/空回答”の実体)。
+- **API には `tierOverride` が存在**(tierOverride=3 は常に Tier 3 で解決、とコードに明記)。
+  Playground UI に露出していないだけで、REST/MCP からは Tier 3 を明示指定できる。
+- **Tier 3 本体(KG 198チャンク)の機能・品質の判断は保留とし、Phase 4 で
+  ① MCP `rag_retrieval` の直接呼び出し、② `tierOverride=3` 指定、の2手段で検証して確定する。**
 - 副産物として観測できたこと: ①Tier 2 の第2経路(NL→SPARQL→**Ontop/R2RML**→SQL)が実動、
   ②記事が警告していた「0行 → リトライ」挙動の実物、③Cedar 認可・SQL Firewall・confidence の trace 可視性。
-- **Tier 3 本体(KG 198チャンク)の機能検証は Phase 4 で MCP `rag_retrieval` の直接呼び出しで行う。**
 
 ## トラブルシューティング
 
