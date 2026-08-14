@@ -130,8 +130,9 @@ docker run --rm --platform linux/arm64 public.ecr.aws/amazonlinux/amazonlinux:20
 - 当初のアカウント全体 $5/日 予算は、既存ワークロード(約$15/日)だけで毎日発火する設計ミスと判明。
 - タグフィルタへの変更を試みたが、本アカウントは Organizations のメンバーアカウントであり
   **コスト配分タグの有効化は管理アカウントでのみ可能**(AccessDeniedException)。
-- 対応: 全体監視は $100/日(最終防衛線)へ変更し、`Project=semantic-context` タグ限定の
-  $15/日 予算(停止忘れ検知)は管理者によるタグ有効化後に追加する2層構成とした。
+- 運用決定: 予算はアカウント全体 **$100/日 の1本のみ**(暴走級の異常検知用)。
+  タグ限定予算は不採用とし、COA の停止忘れ防止は `stop-coa.sh` の習慣と
+  Cost Explorer の定期目視で担保する。
 - しきい値・宛先の変更手順を含む詳細は **`docs/ops/cost-monitoring.md`** を参照。
 
 ## 次工程(Phase 3)への引き継ぎ
