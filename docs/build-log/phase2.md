@@ -110,6 +110,21 @@ docker run --rm --platform linux/arm64 public.ecr.aws/amazonlinux/amazonlinux:20
 - `scripts/ops/stop-coa.sh` 実行後のアイドル: 約 **$0.45/時**(VPC エンドポイント40本+NAT)
 - 運用ルール: セッション終了時に必ず stop。1週間以上使わないならフル削除(再デプロイ62分で戻せることを実証済み)。
 
+### アイドルコスト実測(2026-08-13、停止状態の丸一日)
+
+| 項目 | 値 |
+|---|---|
+| VPC サービス日額(Cost Explorer 実測) | $12.43 |
+| うち COA 以前からの既存分 | $1.80 |
+| **COA アイドル実測** | **$10.6/日 ≒ $0.44/時** — 計画値 $0.45/時とほぼ一致 |
+
+- 懸念していた「エンドポイントの 2AZ 課金で計画の2倍($19/日)」は**発生せず**。1AZ 化パッチは不要と判定。
+- デプロイ当日(8/12)の VPC $9.31 は NAT データ転送費(イメージ・依存取得)の上乗せによる一時的なもの。
+- OpenSearch・Neptune はコスト上位に現れず、`aoss_min_ocu=0` と t4g.medium 縮小+停止運用が有効に機能。
+- 判定に使ったコマンド:
+  `aws ce get-cost-and-usage --time-period Start=<日>,End=<翌日> --granularity DAILY --metrics UnblendedCost --filter '{"Dimensions":{"Key":"SERVICE","Values":["Amazon Virtual Private Cloud"]}}' --region us-east-1`
+  (Cost Explorer は UTC 日付・数時間の集計遅延あり。確定値は翌日昼以降に確認)
+
 ## 次工程(Phase 3)への引き継ぎ
 
 1. テストデータセットは作成済み: `datasets/change-point-management/`(変化点管理票100件、JSON/CSV)
