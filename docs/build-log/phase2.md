@@ -125,6 +125,15 @@ docker run --rm --platform linux/arm64 public.ecr.aws/amazonlinux/amazonlinux:20
   `aws ce get-cost-and-usage --time-period Start=<日>,End=<翌日> --granularity DAILY --metrics UnblendedCost --filter '{"Dimensions":{"Key":"SERVICE","Values":["Amazon Virtual Private Cloud"]}}' --region us-east-1`
   (Cost Explorer は UTC 日付・数時間の集計遅延あり。確定値は翌日昼以降に確認)
 
+### 予算アラートの見直し(2026-08-14 追記)
+
+- 当初のアカウント全体 $5/日 予算は、既存ワークロード(約$15/日)だけで毎日発火する設計ミスと判明。
+- タグフィルタへの変更を試みたが、本アカウントは Organizations のメンバーアカウントであり
+  **コスト配分タグの有効化は管理アカウントでのみ可能**(AccessDeniedException)。
+- 対応: 全体監視は $100/日(最終防衛線)へ変更し、`Project=semantic-context` タグ限定の
+  $15/日 予算(停止忘れ検知)は管理者によるタグ有効化後に追加する2層構成とした。
+- しきい値・宛先の変更手順を含む詳細は **`docs/ops/cost-monitoring.md`** を参照。
+
 ## 次工程(Phase 3)への引き継ぎ
 
 1. テストデータセットは作成済み: `datasets/change-point-management/`(変化点管理票100件、JSON/CSV)
