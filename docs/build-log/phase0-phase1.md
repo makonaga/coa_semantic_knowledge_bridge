@@ -19,7 +19,7 @@ COA バージョン: v0.1.0 タグ(https://github.com/aws/context-ontology-accel
 | 認証プリンシパル | IAM ユーザー `arn:aws:iam::290918126236:user/nagakura.makoto`(root でない)。この ARN を Phase 2 の `smus_admin_principal_arns` に使用 |
 | CDK bootstrap | us-west-2(version 29)/ us-east-1(version 27)とも実施済み |
 | Lambda 同時実行クォータ | 1000(必要値 110 以上)|
-| Bedrock 実呼び出し | 4モデル全て成功: `us.anthropic.claude-sonnet-5` / `us.anthropic.claude-sonnet-4-6` / `us.anthropic.claude-haiku-4-5-20251001-v1:0` / `us.cohere.embed-v4:0` |
+| Bedrock 実呼び出し | 4モデル全て成功: `us.anthropic.claude-sonnet-5` / `us.anthropic.claude-sonnet-4-6` / `us.anthropic.claude-haiku-4-5-20251001-v1:0` / `us.cohere.embed-v4:0`(※埋め込みは 2026-08-15 に `amazon.titan-embed-text-v2:0` へ切替。経緯は phase4b-titan-switch.md)|
 | DataZone ドメイン残骸 | なし |
 | CloudTrail | 証跡あり(2本)|
 | ディスク空き | 1619GB |

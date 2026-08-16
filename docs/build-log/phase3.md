@@ -3,6 +3,8 @@
 実施日: 2026-08-14
 結果: **完了** — Scan → FK レビュー → Induction → 3層検証まで全工程を実施
 namespace: `change-mgmt`(ID: 7c1ba4c7-39c6-414e-be5e-307208a01b34)
+※この namespace は 2026-08-15 の Titan 切替時に削除・再作成され、現行 ID は
+`efa19502-459e-4439-9713-add6d0fd987d`(経緯は phase4b-titan-switch.md)
 
 ---
 

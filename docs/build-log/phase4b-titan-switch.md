@@ -5,30 +5,34 @@
 なお切り替え前の Embed v4 呼び出しは**すべて架空の合成テストデータのみ**
 (Bedrock ホストのためデータは自アカウントの us-west-2 内で処理、Cohere 社への送信・学習利用なし)。
 
-## 進捗チェックポイント(2026-08-15 中断時点)
+## 結果: 切り替え完了(2026-08-16)
 
 | ステップ | 状態 |
 |---|---|
 | B-1: Titan 疎通確認(1024次元応答) | ✅ 完了 |
 | B-2: モデル ID 一括置換(TS/Python 定数ほか9ファイル)+ `pnpm nx run @coa/shared:build` | ✅ 完了 |
 | B-3: 4スタック再デプロイ(sources / serve / ontology / metric-service)| ✅ 完了(全て UPDATE_COMPLETE、8/15 00:51-01:01 UTC)|
-| B-4-1: 旧 namespace `change-mgmt` の削除(旧 Cohere ベクター全削除) | ✅ 完了(一覧が空になったことを確認)|
-| **B-4-2以降: namespace 再作成〜再オンボード** | ⬜ **未実施(再開はここから)** |
-| B-5: 動作確認(Playground + MCP rag_retrieval) | ⬜ 未実施 |
+| B-4-1: 旧 namespace `change-mgmt` の削除(旧 Cohere ベクター全削除) | ✅ 完了 |
+| B-4-2: namespace 再作成〜再オンボード | ✅ 完了(新 namespace ID: `efa19502-459e-4439-9713-add6d0fd987d`)|
+| B-5: 動作確認(Playground + MCP rag_retrieval) | ✅ **全項目合格** |
 
-**これ以降、COA から Cohere への呼び出しは発生しない**(B-3 完了時点で確定)。
+**B-3 完了以降、COA から Cohere への呼び出しは発生しない。旧 Cohere 生成ベクターも B-4-1 で全削除済み。**
 
-## 再開手順(次回セッション)
+## B-5 検証結果(Titan での3層動作)
 
-1. `bash scripts/ops/start-coa.sh` → Neptune available まで待機
-2. Web UI で namespace `change-mgmt` を再作成 → 新 namespace ID を控える
-3. Glue ソース `coa_testdata` 登録 → スキャン → FK レビュー承認 → Approve source
-4. S3 ソース `change-docs`(documents/)と `policy-docs`(policy/)を登録
-   (Titan はバッチ埋め込み API 非対応のため取り込みは前回比で長め: 20〜40分見込み)
-5. Induction → Validate → Accept
-6. メトリクス `failed_count` 再登録(SQL・Synonym は phase3.md 記載どおり)
-7. B-5 検証: Playground で `不合格件数`→4、MCP で `rag_retrieval`(要 `export NAMESPACE_ID=新ID`)
-   → POLICY-001 がヒットすれば切り替え完了。**完了後にドキュメント一式を Titan ベースへ更新する。**
+| 検証 | 結果 |
+|---|---|
+| Tier 1: `不合格件数` | ✅ Metric Match(synonym, confidence 1)発火・確定的実行(100%)・値 4 |
+| Tier 2: 機種ごとの変化点件数 | ✅ 10機種×10件(FK JOIN 含む)。クエリ埋め込み 1024次元(Titan)・confidence 90% |
+| Tier 3: MCP `rag_retrieval` | ✅ **POLICY-001 の該当条文がスコア1位(0.535)** — Cohere 時(0.518)と同等以上。DR1 条項が2位、関連実例(CP-061/081)も上位 |
+
+### 実測メモ
+
+- 100文書の再取り込み(前処理+抽出+Titan 埋め込み+グラフ格納)は**約7分**。
+  懸念していた「Titan のバッチ API 非対応による遅延」は実運用上問題にならなかった。
+- チャンク数は Cohere 時と完全一致(100文書/198チャンク)— 分割はモデル非依存で再現。
+- FK 推論も再現(`model_name → models.model_name` の1件のみ、confidence 90%)。
+- HermiT 検証も同一結果(0 error・CONSISTENT)。
 
 ## 技術メモ(切り替えの設計根拠)
 
@@ -60,3 +64,20 @@
 Step Functions 実行は30秒で SUCCEEDED していたが、UI の一覧表示が更新されず約1時間 DELETING に見えた。
 **対処**: ブラウザのページ再読み込み。長引いて見えたら
 `aws stepfunctions list-executions --state-machine-arn <coa-dev-namespace-deletion-pipeline>` で実状態を確認する。
+
+### トラブル14(小): Glue ソース登録時のリージョン入力ミス
+
+**症状**: Scan failed —
+`Could not connect to the endpoint URL: "https://glue.us-west-2-1.amazonaws.com/"`。
+**原因**: 登録フォームの Region 欄に `us-west-2-1` と入力してしまった(不正なリージョン名が
+そのままエンドポイント URL に組み込まれる)。接続テストのエラーメッセージに実際の接続先が
+出るため、URL 中のリージョン文字列を見れば即座に切り分けられる。
+**対処**: ソースを Delete して正しい Region(`us-west-2`)で再登録。
+
+### 再構築時の小さな注意点(UI 操作)
+
+- namespace 作り直し直後は Create metric の Data source ドロップダウンが空のことがある → **ページ再読み込み**で解消。
+- メトリクス作成は **Description が必須**(未入力だと「Description is required」)。
+- メトリクス作成が「Endpoint request timed out」(API Gateway 29秒制限)になっても、
+  **サーバー側では作成が完了していることがある**。一覧を確認し、重複作成前に既存を Edit する。
+- テーブル承認は詳細画面右上の「**Approve table & all columns**」ボタンが最短(FK・PK 込みで一括承認)。

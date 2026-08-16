@@ -64,7 +64,8 @@
   `aws lambda get-account-settings --query AccountLimit.ConcurrentExecutions`
   DoD: 実効値 ≥ 100(reservedConcurrentExecutions: 5 × 2 + unreserved 最小値の余裕)。10 なら引き上げ申請し、**実効値反映まで待つ**。
 - [ ] **0-3. Bedrock モデル実呼び出しテスト**
-  Sonnet 5(serve 既定)/ Sonnet 4.6(フォールバック)/ Haiku 4.5 / Cohere Embed v4 を `bedrock-runtime invoke-model` で実テスト。agreement AVAILABLE でも TPM クォータ未割当のケースがあるため必ず invoke で確認。
+  Sonnet 5(serve 既定)/ Sonnet 4.6(フォールバック)/ Haiku 4.5 / 埋め込みモデルを `bedrock-runtime invoke-model` で実テスト。agreement AVAILABLE でも TPM クォータ未割当のケースがあるため必ず invoke で確認。
+  ※埋め込みモデルは COA 既定の Cohere Embed v4 から **Amazon Titan Text Embeddings V2 に変更済み**(社内の Cohere 利用申請未了のため。切替手順・検証結果は build-log/phase4b-titan-switch.md)。
   DoD: 少なくとも Sonnet 4.6 と埋め込みモデルが呼べる。Sonnet 5 不可なら Phase 2-5 の SSM 差し替えを実施予定に組み込む。
 - [ ] **0-4. ローカルツールチェーン**: Python 3.12 / Node 22+ / pnpm / uv / Java 17+(Smithy codegen 必須)/ Gradle / Docker。
   DoD: 全コマンドがバージョン応答する。

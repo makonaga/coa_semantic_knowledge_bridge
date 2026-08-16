@@ -86,7 +86,7 @@ echo "--- 0-4. Bedrock モデル実呼び出しテスト ---"
 #   serve 既定 LLM         : us.anthropic.claude-sonnet-5
 #   ontology-engine LLM    : us.anthropic.claude-sonnet-4-6
 #   rerank/抽出用          : us.anthropic.claude-haiku-4-5-20251001-v1:0
-#   埋め込み               : us.cohere.embed-v4:0
+#   埋め込み               : amazon.titan-embed-text-v2:0(2026-08-15 に Cohere Embed v4 から切替)
 for MODEL in \
   "us.anthropic.claude-sonnet-5" \
   "us.anthropic.claude-sonnet-4-6" \
@@ -109,12 +109,12 @@ done
 
 EMBED_OUT=$(mktemp)
 ERR=$(aws bedrock-runtime invoke-model --region "$REGION" \
-        --model-id "us.cohere.embed-v4:0" \
+        --model-id "amazon.titan-embed-text-v2:0" \
         --cli-binary-format raw-in-base64-out \
-        --body '{"texts":["ping"],"input_type":"search_query"}' \
+        --body '{"inputText":"ping","dimensions":1024,"normalize":true}' \
         "$EMBED_OUT" 2>&1 >/dev/null) \
-  && ok "embed OK: us.cohere.embed-v4:0" \
-  || ng "呼び出し不可: us.cohere.embed-v4:0 ($(echo "$ERR" | head -1))"
+  && ok "embed OK: amazon.titan-embed-text-v2:0" \
+  || ng "呼び出し不可: amazon.titan-embed-text-v2:0 ($(echo "$ERR" | head -1))"
 rm -f "$EMBED_OUT"
 
 # ---------------------------------------------------------------------------

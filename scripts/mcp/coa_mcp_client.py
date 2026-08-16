@@ -26,7 +26,7 @@ import sys
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
-DEFAULT_NAMESPACE = "7c1ba4c7-39c6-414e-be5e-307208a01b34"  # change-mgmt
+DEFAULT_NAMESPACE = "efa19502-459e-4439-9713-add6d0fd987d"  # change-mgmt(Titan 再構築後)
 
 
 def _print_result(result) -> None:
