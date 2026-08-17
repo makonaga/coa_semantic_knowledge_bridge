@@ -58,7 +58,13 @@
 
 - **原因**: Neptune を小さいインスタンス(db.t4g.medium 等)にしていると、
   グラフ書き込みの並列クエリでサーバ側メモリが枯渇する
-- **対処**: `aws neptune modify-db-instance --db-instance-identifier 【インスタンスID】 --db-instance-class db.r6g.large --apply-immediately`(約10分)→ Re-scan。
+- **対処**(約10分)→ その後 Re-scan:
+  ```bash
+  INSTANCE_ID=$(aws neptune describe-db-clusters --db-cluster-identifier coa-dev-neptune \
+    --region $COA_REGION --query 'DBClusters[0].DBClusterMembers[0].DBInstanceIdentifier' --output text)
+  aws neptune modify-db-instance --db-instance-identifier $INSTANCE_ID \
+    --db-instance-class db.r6g.large --apply-immediately --region $COA_REGION
+  ```
   **KG 構築を伴う運用の下限は db.r6g.large(16GB)**。CDK パッチ側も揃えること(ドリフト防止)
 
 ### 10. 完了済み文書ソースの Re-scan ボタンが押せない
