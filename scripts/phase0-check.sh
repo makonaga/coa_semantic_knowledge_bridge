@@ -110,10 +110,12 @@ do
        }
 done
 
+# Titan の本文形式は実構築で検証済み。Cohere の本文形式は COA v0.1.0 の
+# libs/common/src/coa_common/embeddings.py のリクエスト定義に合わせたもの(実呼び出しは未検証)
 EMBED_MODEL="${COA_EMBED_MODEL:-amazon.titan-embed-text-v2:0}"
 case "$EMBED_MODEL" in
   *titan*)  EMBED_BODY='{"inputText":"ping","dimensions":1024,"normalize":true}' ;;
-  *cohere*) EMBED_BODY='{"texts":["ping"],"input_type":"search_query","embedding_types":["float"]}' ;;
+  *cohere*) EMBED_BODY='{"texts":["ping"],"input_type":"search_query","output_dimension":1024,"embedding_types":["float"]}' ;;
   *)        EMBED_BODY='{"inputText":"ping"}' ;;
 esac
 EMBED_OUT=$(mktemp)

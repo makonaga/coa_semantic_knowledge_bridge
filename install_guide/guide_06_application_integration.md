@@ -25,8 +25,13 @@ Context Manager は毎回のクエリで JWT から `sub` / `email` / `groups` �
 |---|---|
 | ロール | platform-admin / namespace-owner / data-analyst 等(アクション単位の Cedar 認可) |
 | tableAllowlist | その利用者に**見せてよいテーブル**の限定 |
-| columnDenylist | **隠す列**(PII 想定)。複数ロール保持時も deny が勝つ(制約は蓄積し、消えない設計) |
+| columnDenylist | **隠す列**(PII 想定) |
 | allowedMetrics | 実行を許すメトリクスの限定 |
+
+> **v0.1.0 の注意**: 同一 namespace に複数のグラントを持つ利用者では、制限は**寛容側に
+> マージ**されます(columnDenylist は全グラントが拒否した列のみ拒否)。無制限のグラントを
+> 追加すると他グラントの列制限が実質無効になるため、グラント設計時に注意してください
+> (上流の main ブランチでは deny 優先に強化済み)。
 
 つまり「**誰が聞いているか**」でナレッジの見える範囲が変わります。これは通常の
 RAG(Bedrock Knowledge Bases 等)には無い COA の中核価値であり、これを活かすには
@@ -47,10 +52,12 @@ RAG(Bedrock Knowledge Bases 等)には無い COA の中核価値であり、こ�
   (Claude Desktop / Cursor 等)からの利用を想定しています。
 - **社内 IdP のフェデレーション**: COA のオーソライザは OIDC 汎用設計
   (`allowedAudience` による `aud` 検証のみ。COA の infra/README に明記)のため、
-  Cognito に **Microsoft Entra ID / Okta 等を OIDC/SAML でフェデレーション**すれば、
+  **Microsoft Entra ID / Okta 等の OIDC/SAML フェデレーション**を構成すれば、
   社員は普段の社内認証のままナレッジを使えます。IdP のグループクレームを
-  Cognito の `groups` にマッピングすれば、部署単位の列制限・namespace 制限も機能します。
-  設定は COA の `infra/cdk.json` context(`oidcProviders` / `samlProviders`)で行います。
+  `groups` にマッピングすれば、部署単位の列制限・namespace 制限も機能します。
+  v0.1.0 の設定は SSM パラメータ `/coa/config` の COA 設定(`idpType` / `oidcSettings` /
+  `claimsMappings`)で行います(COA の infra/README「IdP mode behavior」参照。
+  ※本ガイドの実構築は Cognito 直接のみで、フェデレーションは未検証です)。
 
 ### パターンB: 人間が介在しないサービス/バッチ/エージェント
 

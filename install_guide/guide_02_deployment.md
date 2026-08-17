@@ -77,10 +77,14 @@ COA v0.1.0 には、**us-east-1 以外にデプロイすると MCP の実行系�
 バグがあります(環境変数名の不一致。詳細: [トラブル10](guide_07_troubleshooting.md))。1行追加で修正します:
 
 ```bash
-sed -i 's/^\(\s*\)AWS_REGION: region,$/\1AWS_REGION: region,\n\1SCL_AWS_REGION: region,/' \
+sed -i 's/AWS_REGION: region,/AWS_REGION: region,\n        SCL_AWS_REGION: region,/' \
   infra/lib/stacks/services/mcp-stack.ts
-grep -n "SCL_AWS_REGION" infra/lib/stacks/services/mcp-stack.ts   # 1行出れば OK
+grep -n "SCL_AWS_REGION\|AWS_REGION" infra/lib/stacks/services/mcp-stack.ts
+# AWS_REGION: region, の直後に SCL_AWS_REGION: region, の行が1つ増えていれば OK
 ```
+
+> この sed は実構築で使用したものです。**2回実行すると行が重複する**ので、
+> 適用前に grep で未適用であることを確認してください。
 
 ### 4-3. 埋め込みモデルの切り替え(Cohere Embed v4 → Titan Text Embeddings V2)
 
@@ -109,23 +113,29 @@ grep -rl "us\.cohere\.embed-v4:0" --include="*.ts" --include="*.py" . | grep -v 
 ### 4-4. (東京リージョンのみ)Claude モデル ID の置換
 
 [ガイド01 ステップ7-1](guide_01_prerequisites.md) で控えたプロファイル ID に置き換えます。
-COA がハードコードしている ID は次の3つです:
+実行時に使われる既定モデルは次の**3つ**です(このほかテストコード内にも多数の
+モデル ID が現れますが、デプロイの動作に影響するのはこの3つです):
 
-```bash
-grep -rn "us\.anthropic\." --include="*.ts" --include="*.py" . | grep -v node_modules | grep -o "us\.anthropic\.[a-z0-9.:-]*" | sort -u
-```
+| 用途 | v0.1.0 の既定 ID |
+|---|---|
+| 質問応答(serve) | `us.anthropic.claude-sonnet-5` |
+| オントロジー生成 | `us.anthropic.claude-sonnet-4-6` |
+| 抽出・rerank | `us.anthropic.claude-haiku-4-5-20251001-v1:0` |
 
 それぞれを、確認した東京向け ID(`jp.` / `apac.` / `global.` プレフィックス)へ置換します。
 例(**ID は必ずステップ7-1の確認結果に合わせて書き換えてください**):
 
 ```bash
-# 例: Sonnet 4.5 の国内完結プロファイルに置き換える場合
 grep -rl "us\.anthropic\.claude-sonnet-5" --include="*.ts" --include="*.py" . | grep -v node_modules \
   | xargs sed -i 's/us\.anthropic\.claude-sonnet-5/【確認したプロファイルID】/g'
+# 残り2つの ID も同様に置換
 ```
 
-置換後は 4-3 と同様に `pnpm nx run @coa/shared:build` を実行し、
-`grep -rn "us\.anthropic\." --include="*.ts" --include="*.py" . | grep -v node_modules` で残存ゼロを確認します。
+置換後は 4-3 と同様に `pnpm nx run @coa/shared:build` を実行します。
+
+> **注意**: 東京リージョンでの構築は本ガイドでは**未検証**です(実証済みはオレゴンのみ)。
+> このモデル ID 置換もオレゴン構築で検証した Titan 置換(4-3)と同じ仕組みに基づく手順であり、
+> 実施時は `scripts/phase0-check.sh`(`COA_CHAT_MODELS` 指定)での実呼び出し確認を必ず先に行ってください。
 
 ## ステップ5: デプロイ設定(cdk.json の context)
 

@@ -68,6 +68,9 @@ aws athena get-query-results --query-execution-id $QID --region $COA_REGION \
   --query 'ResultSet.Rows[1].Data[0].VarCharValue' --output text   # 100 なら OK
 ```
 
+> まだ実行中(`QUERY_STATE: RUNNING` エラー)の場合は数秒待って
+> `get-query-results` の行だけ再実行してください。
+
 > **日本語カラムコメントは必ず付けてください**(自データの場合も)。コメントは Scan 時に
 > DETERMINISTIC なエンリッチとして取り込まれ、AI の推測よりも優先されるため、
 > Tier 2 の SQL 生成精度が上がります。

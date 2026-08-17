@@ -7,6 +7,12 @@
 
 API 利用に必要な値は環境ごとに異なります。すべて次のコマンドで確認できます。
 
+> 検証水準の注記: MCP URL の SSM 参照とトークン取得・MCP 接続・Context Manager 呼び出しは
+> **実構築で使用済み**の手順です。クライアント ID の SSM/CloudFormation 参照と
+> namespace の DynamoDB 一覧は、COA v0.1.0 のソースコード(SSM パラメータ定義・
+> CfnOutput 定義・テーブル定義)から導出した確認手段です(実構築時は Web UI・
+> デプロイ出力から値を控えていたため、コマンドとしての実行実績はありません)。
+
 前提の変数:
 
 ```bash
@@ -76,7 +82,7 @@ export TOKEN=$(aws cognito-idp initiate-auth \
   --auth-parameters "USERNAME=$COA_USERNAME,PASSWORD=$COA_PW" \
   --region $COA_REGION --query 'AuthenticationResult.IdToken' --output text)
 unset COA_PW
-echo "トークン長: ${#TOKEN}"   # 900 前後の数字が出れば取得成功
+echo "トークン長: ${#TOKEN}"   # 数百〜千程度の数字が出れば取得成功(0 や空なら失敗)
 ```
 
 ID トークンの有効期限は **24時間**(MCP/CLI クライアントの設定値)。期限切れ

@@ -36,9 +36,10 @@ aws neptune describe-db-clusters --db-cluster-identifier coa-dev-neptune \
 2. **取り込み・スキャン・namespace 削除などのパイプライン操作は、停止中は必ず失敗します**
    ([トラブル12](guide_07_troubleshooting.md))。ナレッジ操作の前に `start-coa.sh` を実行してください。
 3. **1週間以上使わないならフル削除の方が安い**です(アイドルでも約 $75/週)。
-   再デプロイは約62分で完了することを実証済みです。削除は COA リポジトリで
-   `pnpm --filter coa-infra exec cdk destroy --all` を実行します(us-east-1 の
-   `coa-dev-edge-waf` も忘れずに)。
+   再デプロイは約62分で完了することを実証済みです。削除は COA リポジトリの公式ターゲット
+   `make destroy-dev` を使います(※本ガイドの検証ではフル削除は未実施です。
+   実行後は CloudFormation コンソールで、メインリージョンと us-east-1 の
+   `coa-dev-edge-waf` を含む全スタックが消えたことを確認してください)。
 
 ## ステップ2: 予算アラートの作成
 
