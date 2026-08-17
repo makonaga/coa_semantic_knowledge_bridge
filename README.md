@@ -68,6 +68,7 @@ docs/              構築前の検証済み作業計画(記録)
 | [guide_05_api_and_mcp](install_guide/guide_05_api_and_mcp.md) | 必要な ID・URL の確認方法、トークン取得、MCP、Notebook |
 | [guide_06_application_integration](install_guide/guide_06_application_integration.md) | 認証・認可の仕組みと本番アプリの認証パターン(IdP フェデレーション) |
 | [guide_07_troubleshooting](install_guide/guide_07_troubleshooting.md) | 実際に遭遇した全18事象の症状・原因・対処 |
+| [guide_08_ontology_design](install_guide/guide_08_ontology_design.md) | **オントロジー設計ガイド**: COA の用語解説(Tier・クラス・ノード等)、サンプルデータの設計判断、自ドメインへの適用手順 |
 
 ## 重要な注意事項
 
@@ -116,7 +117,8 @@ Claude 推論プロファイル・埋め込みモデルの提供状況)と
 ### v1.0.0(2026-08-17)
 
 - 初版公開
-- COA v0.1.0 の実構築(オレゴン)に基づく導入ガイド 00〜07
+- COA v0.1.0 の実構築(オレゴン)に基づく導入ガイド 00〜07 と
+  オントロジー設計ガイド(guide_08: 用語解説・設計ケーススタディ・適用手順)
 - リージョンバグ修正パッチ / Neptune 縮小パッチ / Titan 切り替えパッチ
 - 検証用合成データセット(変化点管理票100件+機種マスタ+規程文書)と投入手順
 - MCP 検証クライアントと Jupyter Notebook サンプル(設定値の自動発見つき)
