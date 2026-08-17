@@ -10,17 +10,17 @@
 
 | 項目 | 値 |
 |---|---|
-| Web UI | https://dd7zlztjwxgl1.cloudfront.net(CloudFront: E2YSCY4FL36M78)|
-| VPC | vpc-0be3741bc929ba776(10.0.0.0/16、us-west-2)|
-| Cognito ユーザープール | us-west-2_JE9iaY4pA |
-| ログインユーザー | nagakura.makoto@jp.panasonic.com(Cognito グループ `Admin` = platform-admin ロール)|
-| Bedrock ガードレール | fhtyc0s0x50u(生成用)/ yl7b6t3mkttn(検索用)|
+| Web UI | https://<CloudFrontドメイン>.cloudfront.net(CloudFront: <ディストリビューションID>)|
+| VPC | vpc-xxxxxxxxxxxxxxxxx(10.0.0.0/16、us-west-2)|
+| Cognito ユーザープール | <ユーザープールID> |
+| ログインユーザー | <管理者メールアドレス>(Cognito グループ `Admin` = platform-admin ロール)|
+| Bedrock ガードレール | <ガードレールID>(生成用)/ <ガードレールID>(検索用)|
 | Neptune | `coa-dev-neptune`、**db.t4g.medium(縮小パッチ適用済み、$0.065/時)** |
 | スタック | us-west-2 に15個 + us-east-1 に coa-dev-edge-waf(CloudFront 用 WAF)|
-| ソースデータ用 S3 | coa-dev-sources-data-290918126236 |
+| ソースデータ用 S3 | coa-dev-sources-data-<ACCOUNT_ID> |
 
 適用した設定(`infra/cdk.json` context):
-`env=dev` / `smus_admin_principal_arns=arn:aws:iam::290918126236:user/nagakura.makoto` /
+`env=dev` / `smus_admin_principal_arns=arn:aws:iam::<ACCOUNT_ID>:user/<IAMユーザー名>` /
 `aoss_min_ocu=0` / `aoss_max_ocu=16`
 
 ローカルパッチ(タグ更新時に再適用が必要):
@@ -29,7 +29,7 @@
 既知の状態(問題なし):
 - Cognito に初期ダミー管理者 `nobody@amazon.com` が自動作成されている(COA の仕様。
   メール受信不能なためログイン不可であり実害なし。CloudFormation 管理下のため削除しない)。
-- 初回に作成した `nagakura54@gmail.com` ユーザーは削除済み(会社アドレスに変更)。
+- 初回に別アドレスで作成したユーザーは削除済み(管理者アドレスに変更)。
 
 ## 実施手順(最終形)
 
@@ -133,7 +133,7 @@ docker run --rm --platform linux/arm64 public.ecr.aws/amazonlinux/amazonlinux:20
 - 運用決定: 予算はアカウント全体 **$100/日 の1本のみ**(暴走級の異常検知用)。
   タグ限定予算は不採用とし、COA の停止忘れ防止は `stop-coa.sh` の習慣と
   Cost Explorer の定期目視で担保する。
-- しきい値・宛先の変更手順を含む詳細は **`docs/ops/cost-monitoring.md`** を参照。
+- しきい値・宛先の変更手順を含む詳細は **`install_guide/guide_03_cost_operation.md`** を参照。
 
 ## 次工程(Phase 3)への引き継ぎ
 

@@ -17,7 +17,7 @@
       {"Name": "evaluation_detail", "Type": "string", "Comment": "評価内容の詳細(評価方法・確認項目)"},
       {"Name": "evaluation_result", "Type": "string", "Comment": "評価結果。値は「合格」「条件付き合格」「不合格(対策後合格)」のいずれか"}
     ],
-    "Location": "s3://coa-testdata-290918126236/glue/change_points/",
+    "Location": "s3://__DATA_BUCKET__/glue/change_points/",
     "InputFormat": "org.apache.hadoop.mapred.TextInputFormat",
     "OutputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
     "SerdeInfo": {

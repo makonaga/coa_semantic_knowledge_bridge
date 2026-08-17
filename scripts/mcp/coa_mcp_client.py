@@ -4,10 +4,10 @@
 # ///
 """COA MCP サーバー(AgentCore Runtime)の検証用クライアント。
 
-前提の環境変数:
+前提の環境変数(確認方法は install_guide/guide_05_api_and_mcp.md ステップ1〜2):
   MCP_URL       — AgentCore Runtime の invocations URL
-  TOKEN         — Cognito ID トークン(有効期限 約1時間)
-  NAMESPACE_ID  — 省略時は change-mgmt の ID
+  TOKEN         — Cognito ID トークン(MCP/CLI クライアントの有効期限は24時間)
+  NAMESPACE_ID  — 対象 namespace の ID
 
 使い方(リポジトリルートで):
   uv run scripts/mcp/coa_mcp_client.py list
@@ -25,8 +25,6 @@ import sys
 
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
-
-DEFAULT_NAMESPACE = "efa19502-459e-4439-9713-add6d0fd987d"  # change-mgmt(Titan 再構築後)
 
 
 def _print_result(result) -> None:
@@ -51,9 +49,19 @@ async def main() -> None:
 
     url = os.environ.get("MCP_URL")
     token = os.environ.get("TOKEN")
-    namespace = os.environ.get("NAMESPACE_ID", DEFAULT_NAMESPACE)
+    namespace = os.environ.get("NAMESPACE_ID")
     if not url or not token:
-        sys.exit("環境変数 MCP_URL と TOKEN を設定してください(手順書参照)")
+        sys.exit(
+            "環境変数 MCP_URL と TOKEN を設定してください"
+            "(確認方法: install_guide/guide_05_api_and_mcp.md ステップ1〜2)"
+        )
+    if args.command != "list" and not namespace:
+        sys.exit(
+            "環境変数 NAMESPACE_ID を設定してください。namespace 一覧の確認:\n"
+            '  aws dynamodb scan --table-name coa-dev-namespaces --region <リージョン> \\\n'
+            '    --filter-expression "SK = :m" --expression-attribute-values \'{":m":{"S":"METADATA"}}\' \\\n'
+            '    --query "Items[].{id:namespaceId.S,name:name.S,status:status.S}" --output table'
+        )
     if args.command in ("rag", "query") and not args.text:
         sys.exit(f"{args.command} には質問文が必要です")
 

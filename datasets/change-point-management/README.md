@@ -12,6 +12,7 @@ COA 検証用の合成テストデータ。製造業における「機種ごと�
 |---|---|
 | `change_points.json` | 変化点管理票 100 件(パース後 JSON、COA ドキュメントソース/Tier 3 用の元データ) |
 | `change_points.csv` | 同内容の CSV(UTF-8 BOM 付き)。Glue テーブル化して Tier 2(NL→SQL)検証に使用 |
+| `policy/POLICY-001_変化点管理規程.md` | 変化点管理規程(抜粋、架空)。**表に存在しない知識**の代表として Tier 3(文書検索)の検証に使用 |
 
 ## スキーマ
 

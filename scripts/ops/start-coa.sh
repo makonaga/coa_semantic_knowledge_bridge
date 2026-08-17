@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # 停止中の COA を再開する。Neptune の起動完了まで5〜10分かかる。
 # 使い方: bash scripts/ops/start-coa.sh
+#   リージョンは環境変数 COA_REGION で指定(未設定時は us-west-2)
 set -uo pipefail
 
-REGION="us-west-2"
+REGION="${COA_REGION:-us-west-2}"
 PREFIX="coa-dev"
 
 echo "=== COA 起動 (region: $REGION, prefix: $PREFIX) ==="

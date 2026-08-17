@@ -13,7 +13,7 @@
       {"Name": "product_category", "Type": "string", "Comment": "製品カテゴリ(スチームオーブンレンジ/オーブンレンジ/単機能レンジ)"},
       {"Name": "launch_year", "Type": "string", "Comment": "発売年"}
     ],
-    "Location": "s3://coa-testdata-290918126236/glue/models/",
+    "Location": "s3://__DATA_BUCKET__/glue/models/",
     "InputFormat": "org.apache.hadoop.mapred.TextInputFormat",
     "OutputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
     "SerdeInfo": {

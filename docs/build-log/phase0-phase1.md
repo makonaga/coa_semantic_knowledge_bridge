@@ -1,10 +1,12 @@
 # COA セルフホスト構築記録: Phase 0 / Phase 1
 
 実施日: 2026-08-11
-実施者: nagakura.makoto
 リージョン: **us-west-2**(メイン)+ us-east-1(CloudFront WAF 用、AWS 仕様による固定)
 COA バージョン: v0.1.0 タグ(https://github.com/aws/context-ontology-accelerator)
-実行環境: Ubuntu Linux(ホスト名 loreley)、AWS アカウント 290918126236
+実行環境: Ubuntu Linux(x86_64)
+
+> 本書は実構築時の記録です。アカウント固有の値はプレースホルダーに置換しています。
+> 再現手順としては `install_guide/` を参照してください。
 
 ---
 
@@ -16,7 +18,7 @@ COA バージョン: v0.1.0 タグ(https://github.com/aws/context-ontology-accel
 
 | 項目 | 結果 |
 |---|---|
-| 認証プリンシパル | IAM ユーザー `arn:aws:iam::290918126236:user/nagakura.makoto`(root でない)。この ARN を Phase 2 の `smus_admin_principal_arns` に使用 |
+| 認証プリンシパル | IAM ユーザー `arn:aws:iam::<ACCOUNT_ID>:user/<IAMユーザー名>`(root でない)。この ARN を Phase 2 の `smus_admin_principal_arns` に使用 |
 | CDK bootstrap | us-west-2(version 29)/ us-east-1(version 27)とも実施済み |
 | Lambda 同時実行クォータ | 1000(必要値 110 以上)|
 | Bedrock 実呼び出し | 4モデル全て成功: `us.anthropic.claude-sonnet-5` / `us.anthropic.claude-sonnet-4-6` / `us.anthropic.claude-haiku-4-5-20251001-v1:0` / `us.cohere.embed-v4:0`(※埋め込みは 2026-08-15 に `amazon.titan-embed-text-v2:0` へ切替。経緯は phase4b-titan-switch.md)|
@@ -173,7 +175,7 @@ pnpm nx run-many -t test    # 本体のテスト(16タスク)
 ## 次工程(Phase 2)への引き継ぎ事項
 
 1. `infra/cdk.json` の context に設定する値(確定済み):
-   `env=dev` / `smus_admin_principal_arns=arn:aws:iam::290918126236:user/nagakura.makoto` /
+   `env=dev` / `smus_admin_principal_arns=arn:aws:iam::<ACCOUNT_ID>:user/<IAMユーザー名>` /
    `aoss_min_ocu=0` / `aoss_max_ocu=16`
 2. Neptune は `db.t4g.medium` への縮小パッチを予定(us-west-2 での提供可否を
    `describe-orderable-db-instance-options` で確認してから適用)。

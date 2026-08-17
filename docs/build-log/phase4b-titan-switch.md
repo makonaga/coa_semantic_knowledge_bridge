@@ -13,7 +13,7 @@
 | B-2: モデル ID 一括置換(TS/Python 定数ほか9ファイル)+ `pnpm nx run @coa/shared:build` | ✅ 完了 |
 | B-3: 4スタック再デプロイ(sources / serve / ontology / metric-service)| ✅ 完了(全て UPDATE_COMPLETE、8/15 00:51-01:01 UTC)|
 | B-4-1: 旧 namespace `change-mgmt` の削除(旧 Cohere ベクター全削除) | ✅ 完了 |
-| B-4-2: namespace 再作成〜再オンボード | ✅ 完了(新 namespace ID: `efa19502-459e-4439-9713-add6d0fd987d`)|
+| B-4-2: namespace 再作成〜再オンボード | ✅ 完了(新 namespace ID: `<namespace ID>`)|
 | B-5: 動作確認(Playground + MCP rag_retrieval) | ✅ **全項目合格** |
 
 **B-3 完了以降、COA から Cohere への呼び出しは発生しない。旧 Cohere 生成ベクターも B-4-1 で全削除済み。**

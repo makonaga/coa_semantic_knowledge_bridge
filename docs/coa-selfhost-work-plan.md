@@ -1,5 +1,9 @@
 # COA セルフホスト構築 — 検証済み詳細作業計画
 
+> **本書は構築前の計画文書(記録)です。** リージョン表記が us-east-1 のままの箇所など、
+> 実構築(us-west-2)と異なる部分があります。再現手順としては `install_guide/` を、
+> 実構築の経過は `docs/build-log/` を参照してください。
+
 作成日: 2026-08-09
 検証対象: [aws/context-ontology-accelerator](https://github.com/aws/context-ontology-accelerator)
 (v0.1.0 タグ / main `631e152` Mirror sync 2026-08-05 の両方でコード検証済み)

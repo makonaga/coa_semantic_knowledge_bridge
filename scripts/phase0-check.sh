@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
-# Phase 0: COA デプロイ前の環境チェック(メインリージョン: us-west-2)
+# COA デプロイ前の環境チェック(install_guide/guide_01_prerequisites.md ステップ5)
 #
 # 使い方:
-#   bash scripts/phase0-check.sh
-#   (事前に aws configure で認証設定済みであること。aws sts get-caller-identity が
-#    アカウント情報を返せば準備OK)
+#   COA_REGION=us-west-2 bash scripts/phase0-check.sh
+#   (COA_REGION 未設定時は us-west-2。東京の場合は ap-northeast-1 を指定。
+#    事前に aws configure で認証設定済みであること)
+#
+# チェック対象の Bedrock モデルは環境変数で差し替え可能(東京など us. プロファイル圏外向け):
+#   COA_CHAT_MODELS="ID1 ID2 ..."   スペース区切りの Claude 系モデル/プロファイル ID
+#   COA_EMBED_MODEL="モデルID"      埋め込みモデル ID(Titan 系は 1024 次元で疎通確認)
 #
 # 注意: COA の CloudFront 用 WAF スタック(EdgeWafStack)は AWS の仕様上
 # 必ず us-east-1 に作られる(infra/bin/app.ts:404)。そのため CDK bootstrap は
@@ -82,15 +86,14 @@ fi
 # ---------------------------------------------------------------------------
 echo
 echo "--- 0-4. Bedrock モデル実呼び出しテスト ---"
-# COA が実際に参照するモデル ID(リポジトリ内の定義に一致)
+# COA が実際に参照するモデル ID(v0.1.0 の既定。COA_CHAT_MODELS で差し替え可)
 #   serve 既定 LLM         : us.anthropic.claude-sonnet-5
 #   ontology-engine LLM    : us.anthropic.claude-sonnet-4-6
 #   rerank/抽出用          : us.anthropic.claude-haiku-4-5-20251001-v1:0
-#   埋め込み               : amazon.titan-embed-text-v2:0(2026-08-15 に Cohere Embed v4 から切替)
-for MODEL in \
-  "us.anthropic.claude-sonnet-5" \
-  "us.anthropic.claude-sonnet-4-6" \
-  "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+#   埋め込み               : amazon.titan-embed-text-v2:0(ガイド02 ステップ4-3 の Titan 切替前提。
+#                            Cohere のまま使う場合は COA_EMBED_MODEL=us.cohere.embed-v4:0)
+CHAT_MODELS="${COA_CHAT_MODELS:-us.anthropic.claude-sonnet-5 us.anthropic.claude-sonnet-4-6 us.anthropic.claude-haiku-4-5-20251001-v1:0}"
+for MODEL in $CHAT_MODELS
 do
   ERR=$(aws bedrock-runtime converse --region "$REGION" --model-id "$MODEL" \
           --messages '[{"role":"user","content":[{"text":"ping"}]}]' \
@@ -107,14 +110,20 @@ do
        }
 done
 
+EMBED_MODEL="${COA_EMBED_MODEL:-amazon.titan-embed-text-v2:0}"
+case "$EMBED_MODEL" in
+  *titan*)  EMBED_BODY='{"inputText":"ping","dimensions":1024,"normalize":true}' ;;
+  *cohere*) EMBED_BODY='{"texts":["ping"],"input_type":"search_query","embedding_types":["float"]}' ;;
+  *)        EMBED_BODY='{"inputText":"ping"}' ;;
+esac
 EMBED_OUT=$(mktemp)
 ERR=$(aws bedrock-runtime invoke-model --region "$REGION" \
-        --model-id "amazon.titan-embed-text-v2:0" \
+        --model-id "$EMBED_MODEL" \
         --cli-binary-format raw-in-base64-out \
-        --body '{"inputText":"ping","dimensions":1024,"normalize":true}' \
+        --body "$EMBED_BODY" \
         "$EMBED_OUT" 2>&1 >/dev/null) \
-  && ok "embed OK: amazon.titan-embed-text-v2:0" \
-  || ng "呼び出し不可: amazon.titan-embed-text-v2:0 ($(echo "$ERR" | head -1))"
+  && ok "embed OK: $EMBED_MODEL" \
+  || ng "呼び出し不可: $EMBED_MODEL ($(echo "$ERR" | head -1))"
 rm -f "$EMBED_OUT"
 
 # ---------------------------------------------------------------------------

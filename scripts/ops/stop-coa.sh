@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # COA を停止してアイドルコスト(~$0.45/時 = VPCエンドポイント+NATのみ)まで下げる。
 # 使い方: bash scripts/ops/stop-coa.sh
+#   リージョンは環境変数 COA_REGION で指定(未設定時は us-west-2)
 set -uo pipefail
 
-REGION="us-west-2"
+REGION="${COA_REGION:-us-west-2}"
 PREFIX="coa-dev"
 
 echo "=== COA 停止 (region: $REGION, prefix: $PREFIX) ==="

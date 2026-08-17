@@ -12,8 +12,8 @@
 # 1) トークン取得(有効期限 約1時間。パスワードは Web UI と同じ)
 read -s -p "Cognitoパスワード: " COA_PW; echo
 export TOKEN=$(aws cognito-idp initiate-auth \
-  --auth-flow USER_PASSWORD_AUTH --client-id 11mc900lmv23paiadu4ltg7gh \
-  --auth-parameters "USERNAME=nagakura.makoto@jp.panasonic.com,PASSWORD=$COA_PW" \
+  --auth-flow USER_PASSWORD_AUTH --client-id <MCPクライアントID> \
+  --auth-parameters "USERNAME=<管理者メールアドレス>,PASSWORD=$COA_PW" \
   --region us-west-2 --query 'AuthenticationResult.IdToken' --output text)
 unset COA_PW
 
@@ -28,8 +28,8 @@ uv run scripts/mcp/coa_mcp_client.py rag "質問"
 uv run scripts/mcp/coa_mcp_client.py query --tier 3 "質問"
 ```
 
-主要な値: MCP 用 Cognito クライアント `11mc900lmv23paiadu4ltg7gh` / MCP ランタイム
-`coa_dev_mcp_server-s6VponEICz` / CM ランタイム `coa_dev_context_manager-XpMHybGTmt`。
+主要な値: MCP 用 Cognito クライアント `<MCPクライアントID>` / MCP ランタイム
+`coa_dev_mcp_server-<ランダムID>` / CM ランタイム `coa_dev_context_manager-<ランダムID>`。
 接続終了時の「Session termination failed: 404」は AgentCore がセッション削除 API を
 持たないための**無害なメッセージ**。
 

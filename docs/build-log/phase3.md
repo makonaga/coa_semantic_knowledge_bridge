@@ -2,9 +2,9 @@
 
 実施日: 2026-08-14
 結果: **完了** — Scan → FK レビュー → Induction → 3層検証まで全工程を実施
-namespace: `change-mgmt`(ID: 7c1ba4c7-39c6-414e-be5e-307208a01b34)
+namespace: `change-mgmt`(ID: <namespace ID>)
 ※この namespace は 2026-08-15 の Titan 切替時に削除・再作成され、現行 ID は
-`efa19502-459e-4439-9713-add6d0fd987d`(経緯は phase4b-titan-switch.md)
+`<namespace ID>`(経緯は phase4b-titan-switch.md)
 
 ---
 
@@ -17,7 +17,7 @@ namespace: `change-mgmt`(ID: 7c1ba4c7-39c6-414e-be5e-307208a01b34)
 | `policy-docs` | Documents・S3 | 変化点管理規程 1文書(`policy/`、表に無い知識の Tier 3 検証用) | Completed |
 
 - データ生成: `scripts/phase3/prepare_data.py`、Glue 定義: `scripts/phase3/glue/*.json`
-- S3: `s3://coa-testdata-290918126236/`、Glue DB: `coa_testdata`(Athena で事前検証済み)
+- S3: `s3://coa-testdata-<ACCOUNT_ID>/`、Glue DB: `coa_testdata`(Athena で事前検証済み)
 - メトリクス: `failed_count`(Trino 方言、完全 SELECT 文、Synonym「不合格件数」、Example 付き)
 
 ## パイプライン実施結果
