@@ -15,8 +15,9 @@ export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
 ## ステップ1: リポジトリの取得
 
+任意の作業ディレクトリで COA を取得します:
+
 ```bash
-cd ~/work   # 任意の作業ディレクトリ
 git clone --branch v0.1.0 https://github.com/aws/context-ontology-accelerator.git
 cd context-ontology-accelerator
 ```
@@ -245,10 +246,10 @@ aws cognito-idp admin-set-user-password --user-pool-id $POOL_ID --region $COA_RE
 初回は仮パスワードの変更を求められます。左メニューに Administration / Scan / Ontology /
 Playground が表示されれば構築成功です。
 
-**作業を中断する場合は必ず停止スクリプトを実行してください**(以降の運用は [ガイド03](guide_03_cost_operation.md)):
+**作業を中断する場合は必ず停止スクリプトを実行してください**(以降の運用は [ガイド03](guide_03_cost_operation.md))。
+本リポジトリのルートで実行:
 
 ```bash
-cd ~/work/coa_semantic_knowledge_bridge
 bash scripts/ops/stop-coa.sh
 ```
 

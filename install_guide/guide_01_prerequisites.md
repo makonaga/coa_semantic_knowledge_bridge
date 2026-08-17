@@ -26,10 +26,10 @@ echo $ACCOUNT_ID
 **ルートユーザーでの実行は不可**です(チェックスクリプトが検出して FAIL にします)。
 
 最後に、本リポジトリ(チェックスクリプト・データセット・ノートブックを含む)を取得します。
-以降のガイドでは `~/work/coa_semantic_knowledge_bridge` に置いてある前提でパスを記載します:
+置き場所は任意です。以降のガイドで「**本リポジトリのルートで実行**」とある場合は、
+この clone したディレクトリ(`coa_semantic_knowledge_bridge`)を指します:
 
 ```bash
-mkdir -p ~/work && cd ~/work
 git clone https://github.com/makonaga/coa_semantic_knowledge_bridge.git
 cd coa_semantic_knowledge_bridge
 ```
