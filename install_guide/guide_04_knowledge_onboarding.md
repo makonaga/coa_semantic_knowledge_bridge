@@ -24,7 +24,7 @@ export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 Glue テーブル用 CSV と Tier 3 検証用の文書 Markdown 100件を生成し、S3 に配置します:
 
 ```bash
-cd 【このリポジトリのディレクトリ】
+cd ~/work/coa_semantic_knowledge_bridge
 export DATA_BUCKET=coa-testdata-$ACCOUNT_ID    # バケット名は任意(グローバル一意)
 
 python3 scripts/phase3/prepare_data.py         # build/phase3/ に CSV と文書を生成

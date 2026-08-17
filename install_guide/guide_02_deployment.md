@@ -248,7 +248,7 @@ Playground が表示されれば構築成功です。
 **作業を中断する場合は必ず停止スクリプトを実行してください**(以降の運用は [ガイド03](guide_03_cost_operation.md)):
 
 ```bash
-cd 【このリポジトリのディレクトリ】
+cd ~/work/coa_semantic_knowledge_bridge
 bash scripts/ops/stop-coa.sh
 ```
 

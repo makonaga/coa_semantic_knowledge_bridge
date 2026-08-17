@@ -90,7 +90,7 @@ ID トークンの有効期限は **24時間**(MCP/CLI クライアントの設�
 このリポジトリの検証用クライアント(uv があればそのまま動きます)で接続します:
 
 ```bash
-cd 【このリポジトリのディレクトリ】
+cd ~/work/coa_semantic_knowledge_bridge
 uv run scripts/mcp/coa_mcp_client.py list          # 6ツール一覧が出れば接続成功
 uv run scripts/mcp/coa_mcp_client.py metrics       # 登録メトリクス一覧
 uv run scripts/mcp/coa_mcp_client.py query "不合格件数"

@@ -25,6 +25,15 @@ echo $ACCOUNT_ID
 アカウント ID(12桁の数字)が表示されれば OK です。
 **ルートユーザーでの実行は不可**です(チェックスクリプトが検出して FAIL にします)。
 
+最後に、本リポジトリ(チェックスクリプト・データセット・ノートブックを含む)を取得します。
+以降のガイドでは `~/work/coa_semantic_knowledge_bridge` に置いてある前提でパスを記載します:
+
+```bash
+mkdir -p ~/work && cd ~/work
+git clone https://github.com/makonaga/coa_semantic_knowledge_bridge.git
+cd coa_semantic_knowledge_bridge
+```
+
 ## ステップ2: ローカルツールチェーンのインストール
 
 COA のビルドに必要なツールと、Ubuntu 系 Linux での導入コマンドです
