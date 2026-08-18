@@ -289,8 +289,6 @@ Playground でステップ1の質問を順に投げ、**Rationale で「意図�
 
 理解を深めるのに役立つ COA の解説記事です:
 
-- [COA の OBDA / 構造化データ側の解説](https://zenn.dev/aws_japan/articles/59b38ac7ff29fe) —
-  本ガイド1章「理論的背景: OBDA」と併せて
 - [Context Ontology Accelerator (COA) で非構造化データからオントロジーができるまで Dive Deep](https://zenn.dev/aws_japan/articles/97c625b5a8b2cb) —
   短いサンプル文書で Lexical Graph の全ノード(Source/Chunk/Topic/Statement/Fact/Entity)を
   Neptune 上で実際に確認し、OWL/SKOS 出力との対応を追った実測レポート。
