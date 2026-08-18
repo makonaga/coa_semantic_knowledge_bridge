@@ -1,0 +1,31 @@
+{
+  "Name": "change_points",
+  "Description": "機種ごとの変化点管理票(検証用合成データ)。新機種開発時に過去の関連する変更内容と評価内容を参照する用途。",
+  "TableType": "EXTERNAL_TABLE",
+  "Parameters": {
+    "classification": "csv",
+    "skip.header.line.count": "1"
+  },
+  "StorageDescriptor": {
+    "Columns": [
+      {"Name": "id", "Type": "string", "Comment": "管理番号(CP-001〜CP-100)"},
+      {"Name": "model_name", "Type": "string", "Comment": "機種名(電子レンジのモデル型番。models テーブルの model_name に対応)"},
+      {"Name": "change_date", "Type": "string", "Comment": "変更日(YYYY-MM-DD 形式の日付文字列)"},
+      {"Name": "change_summary", "Type": "string", "Comment": "変更内容の要約"},
+      {"Name": "change_detail", "Type": "string", "Comment": "変更内容の詳細(背景・目的を含む)"},
+      {"Name": "evaluation_summary", "Type": "string", "Comment": "評価内容の要約"},
+      {"Name": "evaluation_detail", "Type": "string", "Comment": "評価内容の詳細(評価方法・確認項目)"},
+      {"Name": "evaluation_result", "Type": "string", "Comment": "評価結果。値は「合格」「条件付き合格」「不合格(対策後合格)」のいずれか"}
+    ],
+    "Location": "s3://__DATA_BUCKET__/glue/change_points/",
+    "InputFormat": "org.apache.hadoop.mapred.TextInputFormat",
+    "OutputFormat": "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat",
+    "SerdeInfo": {
+      "SerializationLibrary": "org.apache.hadoop.hive.serde2.OpenCSVSerde",
+      "Parameters": {
+        "separatorChar": ",",
+        "quoteChar": "\""
+      }
+    }
+  }
+}
