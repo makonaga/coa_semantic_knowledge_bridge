@@ -91,8 +91,9 @@ grep -n "SCL_AWS_REGION\|AWS_REGION" infra/lib/stacks/services/mcp-stack.ts
 
 COA の既定埋め込みモデルは Cohere Embed v4 です。組織のポリシー上サードパーティモデルを
 使えない場合や、リージョンで提供が無い場合は、Amazon Titan Text Embeddings V2(同じ1024次元)へ
-一括置換します。**検証済み**: 検索精度は Cohere 時と同等以上、チャンク分割・FK 推論・
-オントロジー検証の結果も完全一致でした(`docs/build-log/phase4b-titan-switch.md`)。
+一括置換します。**検証済み**: 実構築での切り替え検証で、検索精度は Cohere 時と同等以上
+(規程文書の検索スコア 0.535 vs 0.518)、チャンク分割・FK 推論・オントロジー検証の結果も
+完全一致でした。
 
 ```bash
 grep -rl "us\.cohere\.embed-v4:0" --include="*.ts" --include="*.py" . | grep -v node_modules \

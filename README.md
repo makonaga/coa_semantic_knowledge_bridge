@@ -48,12 +48,10 @@ OpenSearch Serverless(ベクター)+ Glue/Athena(構造化データ)+ DynamoDB(�
 ## ディレクトリ構成
 
 ```
-install_guide/     導入手順(00〜07。ここから読む)
+install_guide/     導入手順(00〜08。ここから読む)
 scripts/           環境チェック・停止/起動・データ準備・MCP 検証クライアント
 notebooks/         API アクセスの Jupyter Notebook サンプル
 datasets/          検証用の合成データセット(変化点管理票100件+機種マスタ+規程文書)
-docs/build-log/    実構築の記録(トラブルシューティングの経緯と実測値)
-docs/              構築前の検証済み作業計画(記録)
 ```
 
 ## ガイド一覧

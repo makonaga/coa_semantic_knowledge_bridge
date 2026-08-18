@@ -149,7 +149,7 @@ FK: model_name → models     →   オブジェクトプロパティ 1(クラ�
    投入します。
 
 この設計の結果、FK の誤推論ゼロ・HermiT 検証エラーゼロ・3層すべての検証質問に正答、
-という結果が得られました(詳細な検証結果: `docs/build-log/phase3.md` / `phase4.md`)。
+という結果が得られました。
 
 ---
 
@@ -283,7 +283,6 @@ Playground でステップ1の質問を順に投げ、**Rationale で「意図�
 
 - 操作手順: [ガイド04: ナレッジ構築](guide_04_knowledge_onboarding.md)
 - API からの利用と Tier の使い分け: [ガイド05: API と MCP](guide_05_api_and_mcp.md)
-- 実構築での検証結果の記録: `docs/build-log/phase3.md` / `docs/build-log/phase4.md`
 
 ### 参考記事(AWS Japan 技術ブログ)
 
