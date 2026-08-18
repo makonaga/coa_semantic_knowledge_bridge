@@ -29,6 +29,20 @@ COA は、データの**意味**(このカラムは何か、テーブル同士�
 設計者の仕事は「**どこまでを AI の推論に任せ、どこからを人間の承認済み知識にするか**」の
 線引きです。以降の用語と手順は、すべてこの線引きのためにあります。
 
+### 理論的背景: OBDA(Ontology-Based Data Access)
+
+COA の構造化クエリは、OBDA という確立された研究分野の実装です。利用者(と LLM)は
+物理テーブルではなく**概念層(オントロジー)に SPARQL で問い合わせ**、概念層と物理層を
+つなぐ **R2RML マッピング**に基づいて、**Ontop**(OBDA の代表的 OSS 実装)が SPARQL を
+SQL に変換します。COA の VKG コンテナは実際に Ontop を内蔵しており、変換だけを行って
+実行はしない構成です(実装確認済み。実構築でも Playground の trace で
+質問→SPARQL→SQL の変換過程を確認しています)。
+
+従来、OBDA の導入障壁は「オントロジーと R2RML マッピングを何百テーブル分も手書きする
+コスト」でした。**COA はこの両方を induction で自動生成し、人間の仕事を『書く』から
+『承認する』に変えた**——これが COA の設計上の最大の価値です。本ガイドの設計手順が
+「データの整形」と「レビュー・承認」に集中しているのはこのためです。
+
 ---
 
 ## 2. 用語集
@@ -44,7 +58,7 @@ COA は、データの**意味**(このカラムは何か、テーブル同士�
 | **制約 (Constraint)** | カーディナリティ等のルール(例: 「各注文は必ず1顧客に属する」) |
 | **ナレッジグラフ (Knowledge graph)** | ノードとエッジで知識を格納するデータベース(COA では Neptune)。オントロジーのクラス/プロパティに加え、**文書から抽出されたエンティティ**もノードとして格納される |
 | **mapped クラス** | R2RML マッピングにより**実テーブルに裏付けられた**クラス。**Tier 2(構造化クエリ)で使えるのは mapped クラスのみ**。文書由来・基盤オントロジー由来のクラスは unmapped で、Tier 3 の検索・グラフ探索にのみ使われる |
-| **VKG (Virtual Knowledge Graph) / Ontop / R2RML** | 概念モデル(オントロジー)と物理スキーマ(テーブル)の写像。Tier 2 の第2経路では質問→SPARQL→(Ontop が R2RML で変換)→SQL と流れる |
+| **VKG (Virtual Knowledge Graph) / Ontop / R2RML** | 概念モデル(オントロジー)と物理スキーマ(テーブル)の写像(OBDA の実装。1章の理論的背景を参照)。Tier 2 の第2経路では質問→SPARQL→(Ontop が R2RML で変換)→SQL と流れる。R2RML マッピングは induction から自動生成される |
 | **基盤オントロジー (Foundational ontology)** | FIBO(金融)や Schema.org のような既存の参照オントロジー。カタログから読み込んで grounding の土台にできる |
 | **Grounding** | induction で生成した新クラスを既存オントロジーの概念に**整列**させる仕組み(`rdfs:subClassOf` / `skos:*Match` を付与し、同じ概念の重複増殖を防ぐ)。モードは `NONE`(無効)/ `STANDARD`(名前完全一致のみ)/ `ENHANCED`(既定。LLM が意味の一致を検証) |
 
@@ -67,6 +81,8 @@ COA は、データの**意味**(このカラムは何か、テーブル同士�
 | **Tier 1 / 2 / 3** | 質問解決の3層カスケード(次章) |
 | **tierOverride** | API / MCP で解決層を明示指定するパラメータ(1/2/3)。Playground UI には露出していない |
 | **チャンク / 埋め込み** | 文書取り込みの単位。文書は分割(チャンク化)され、埋め込みモデルでベクター化されて OpenSearch に、抽出エンティティは Neptune に格納される |
+| **Lexical Graph(文書ナレッジグラフ)** | 文書取り込みが構築するグラフの構造(graphrag-toolkit 由来)。文書 → **チャンク** → **トピック**(共通の話題)→ **ステートメント**(主語-述語-目的語の文)→ **エンティティ**の階層でグラフ化される。ベクター索引は **chunk と topic の2種**が既定(v0.1.0)で、Tier 3 の topic_beam 検索は topic 索引を起点にこのグラフを辿る — サンプルの Tier 3 検証でベクター検索(chunk 直接)と合成パス(topic 起点)の再現率が違ったのはこの構造による |
+| **Document induction(文書からのオントロジー生成)** | テーブルだけでなく**文書からも**オントロジー案を生成できる。v0.1.0 の実装は LLM がクラス表・プロパティ表を直接抽出し、既存カタログと SKOS 整列させる方式。生成されたクラスは実テーブルに裏付けが無いため **unmapped**(Tier 3 専用)になる(※今回の構築では未実施) |
 | **confidence / trace / Rationale** | 回答の確信度と実行過程。Playground の Rationale(歯車アイコン → Split panel から表示)でどの Tier がなぜ選ばれ、どんな SQL/SPARQL が実行されたかを確認できる |
 
 ---
@@ -231,6 +247,10 @@ Playground でステップ1の質問を順に投げ、**Rationale で「意図�
   増分 induction は**未検証**)
 - **基盤オントロジーの利用**: FIBO 等をカタログから読み込み、自ドメインのクラスを
   業界標準概念に整列させられる(※未検証)
+- **文書からの induction**: 規程・マニュアルなど文書しか無いドメインでは、文書から
+  オントロジー案を生成する Document induction が使える(用語集参照)。生成クラスは
+  unmapped(Tier 2 対象外)なので、構造化データ由来のオントロジーの**補完**と位置づける
+  (※未検証)
 - **proposal の手編集 / 既存オントロジーのアップロード**: Turtle 等の直接編集・持ち込みも
   可能(※未検証。手編集した場合は Validate のデータ型チェックに注意)
 
@@ -239,11 +259,23 @@ Playground でステップ1の質問を順に投げ、**Rationale で「意図�
 - **実測済み**: 3章の Tier 挙動、4章のケーススタディ全体(数値・検証結果)、5章の手順の骨格
   (実構築で同じ流れを2回実施)
 - **公式ドキュメント+コード由来**: 用語集の定義(COA v0.1.0 の external-docs / 実装)、
-  grounding のモード仕様、mapped クラスの仕様、Tier 1 の曖昧一致スキップ
-- **未検証**: 6章の増分 induction・基盤オントロジー・手編集(該当箇所に明記)
+  OBDA/R2RML/Ontop の構成、Lexical Graph の構造、grounding のモード仕様、
+  mapped クラスの仕様、Tier 1 の曖昧一致スキップ
+- **未検証**: 6章の増分 induction・基盤オントロジー・Document induction・手編集(該当箇所に明記)
 
 ## 関連
 
 - 操作手順: [ガイド04: ナレッジ構築](guide_04_knowledge_onboarding.md)
 - API からの利用と Tier の使い分け: [ガイド05: API と MCP](guide_05_api_and_mcp.md)
 - 実構築での検証結果の記録: `docs/build-log/phase3.md` / `docs/build-log/phase4.md`
+
+### 参考記事(AWS Japan 技術ブログ)
+
+理解を深めるのに役立つ COA の解説記事です:
+
+- [COA の OBDA / 構造化データ側の解説](https://zenn.dev/aws_japan/articles/59b38ac7ff29fe) —
+  本ガイド1章「理論的背景: OBDA」と併せて
+- [Context Ontology Accelerator (COA) で非構造化データからオントロジーができるまで Dive Deep](https://zenn.dev/aws_japan/articles/97c625b5a8b2cb) —
+  用語集「Lexical Graph」「Document induction」と併せて
+- [オントロジーで AI に業務知識を渡す — COA を試してみた](https://zenn.dev/aws_japan/articles/context-ontology-accelerator-deploy) —
+  全体像の入門
