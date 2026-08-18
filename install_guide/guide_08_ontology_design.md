@@ -81,8 +81,8 @@ SQL に変換します。COA の VKG コンテナは実際に Ontop を内蔵し
 | **Tier 1 / 2 / 3** | 質問解決の3層カスケード(次章) |
 | **tierOverride** | API / MCP で解決層を明示指定するパラメータ(1/2/3)。Playground UI には露出していない |
 | **チャンク / 埋め込み** | 文書取り込みの単位。文書は分割(チャンク化)され、埋め込みモデルでベクター化されて OpenSearch に、抽出エンティティは Neptune に格納される |
-| **Lexical Graph(文書ナレッジグラフ)** | 文書取り込みが構築するグラフの構造(graphrag-toolkit 由来)。文書 → **チャンク** → **トピック**(共通の話題)→ **ステートメント**(主語-述語-目的語の文)→ **エンティティ**の階層でグラフ化される。ベクター索引は **chunk と topic の2種**が既定(v0.1.0)で、Tier 3 の topic_beam 検索は topic 索引を起点にこのグラフを辿る — サンプルの Tier 3 検証でベクター検索(chunk 直接)と合成パス(topic 起点)の再現率が違ったのはこの構造による |
-| **Document induction(文書からのオントロジー生成)** | テーブルだけでなく**文書からも**オントロジー案を生成できる。v0.1.0 の実装は LLM がクラス表・プロパティ表を直接抽出し、既存カタログと SKOS 整列させる方式。生成されたクラスは実テーブルに裏付けが無いため **unmapped**(Tier 3 専用)になる(※今回の構築では未実施) |
+| **Lexical Graph(文書ナレッジグラフ)** | 文書取り込みが構築するグラフの構造(graphrag-toolkit 由来)。ノードは階層をなす: **Source**(文書メタデータ)→ **Chunk**(テキストの塊)→ **Topic**(共通の話題。日本語文書でも英語で生成される)→ **Statement**(独立した主張1文。代名詞は実体名に解決される)→ **Fact**(Statement から抽出した **SPO**〔主語-述語-目的語〕/ **SPC**〔主語-述語-補語=属性値〕のトリプル)→ **Entity**(実体。分類の集計が SYS_Class)。ベクター索引は **chunk と topic の2種**が既定(v0.1.0)で、Tier 3 の topic_beam 検索は topic 索引を起点にこのグラフを辿る — サンプルの Tier 3 検証でベクター検索(chunk 直接)と合成パス(topic 起点)の再現率が違ったのはこの構造による |
+| **Document induction(文書からのオントロジー生成)** | テーブルだけでなく**文書からも**オントロジー案を生成できる。**v0.1.0**(本ガイドの構築対象)の実装は、LLM がクラス表・プロパティ表を直接抽出し既存カタログと SKOS 整列させる方式。**より新しいバージョン(main)**では Lexical Graph を入力とするルールベース生成に発展している: Entity の分類 → `owl:Class`(出現頻度がしきい値未満の分類はノイズとして不採用)、**SPO Fact → `owl:ObjectProperty`**、**SPC Fact → `owl:DatatypeProperty`**、Topic → `skos:Concept`(実装確認済み。実例は参考記事の Dive Deep が詳しい)。いずれの方式でも生成クラスは実テーブルに裏付けが無いため **unmapped**(Tier 3 専用)になる(※今回の構築では未実施) |
 | **confidence / trace / Rationale** | 回答の確信度と実行過程。Playground の Rationale(歯車アイコン → Split panel から表示)でどの Tier がなぜ選ばれ、どんな SQL/SPARQL が実行されたかを確認できる |
 
 ---
@@ -183,6 +183,14 @@ FK: model_name → models     →   オブジェクトプロパティ 1(クラ�
 - 規程・ノウハウは**表と重複させず**独立文書にする(判断6)
 - 表側の統制語彙と**同じ用語**で書く(検索の一致率が上がる)
 
+文書は取り込み時に Statement(独立した主張1文)→ Fact(SPO/SPC トリプル)へ分解されます
+(用語集「Lexical Graph」)。この仕組みを踏まえた書き方の指針:
+
+- **主語を明確に書く** — 代名詞(「この店は」等)は自動で実体名に解決されるが、
+  主語が曖昧な文は Statement 分解の精度を下げる
+- **関係と属性を意識して書く** — 「A が B を〜する」(関係=SPO)と「A は〜である」
+  (属性=SPC)の書き分けが、そのままオントロジーの関係/属性の抽出に対応する
+
 ### ステップ4: Scan 結果をレビューする
 
 Scan 後、各カラムのエンリッチ結果(説明・同義語・タグ)を確認します。
@@ -214,6 +222,12 @@ aws athena get-query-results --query-execution-id $QID --region $COA_REGION \
 - Proposal graph のエッジ = 承認した FK と一致するか(余計な関係・欠けた関係がないか)
 - 各クラスの Attributes 数 = カラム数と整合するか
 - **Validate**(HermiT)が 0 error で通るか — エラーが出る場合は FK の循環や矛盾した制約を疑う
+
+> **迷ったら中間表現まで遡る**: 「なぜこのクラス/プロパティが提案されたのか」が
+> ブラックボックスに見えるときは、根拠データに遡れます。テーブル由来なら Scan の
+> エンリッチ結果と承認済み FK、文書由来なら Neptune 上の Lexical Graph
+> (Statement / Fact ノード)が根拠です。文書由来の遡り方の実例は参考記事の
+> Dive Deep が詳しい(Neptune の Graph Explorer でノードを直接確認する方法。※本構築では未実施)。
 
 ### ステップ7: メトリクスを設計する
 
@@ -260,7 +274,9 @@ Playground でステップ1の質問を順に投げ、**Rationale で「意図�
   (実構築で同じ流れを2回実施)
 - **公式ドキュメント+コード由来**: 用語集の定義(COA v0.1.0 の external-docs / 実装)、
   OBDA/R2RML/Ontop の構成、Lexical Graph の構造、grounding のモード仕様、
-  mapped クラスの仕様、Tier 1 の曖昧一致スキップ
+  mapped クラスの仕様、Tier 1 の曖昧一致スキップ。
+  Lexical Graph → OWL/SKOS の生成ルール(SPO/SPC・頻度しきい値・skos:Concept)は
+  **v0.1.0 より新しい main ブランチの実装**で、コードと参考記事(実測レポート)で確認したもの
 - **未検証**: 6章の増分 induction・基盤オントロジー・Document induction・手編集(該当箇所に明記)
 
 ## 関連
@@ -276,6 +292,8 @@ Playground でステップ1の質問を順に投げ、**Rationale で「意図�
 - [COA の OBDA / 構造化データ側の解説](https://zenn.dev/aws_japan/articles/59b38ac7ff29fe) —
   本ガイド1章「理論的背景: OBDA」と併せて
 - [Context Ontology Accelerator (COA) で非構造化データからオントロジーができるまで Dive Deep](https://zenn.dev/aws_japan/articles/97c625b5a8b2cb) —
-  用語集「Lexical Graph」「Document induction」と併せて
+  短いサンプル文書で Lexical Graph の全ノード(Source/Chunk/Topic/Statement/Fact/Entity)を
+  Neptune 上で実際に確認し、OWL/SKOS 出力との対応を追った実測レポート。
+  用語集「Lexical Graph」「Document induction」、ステップ3・6 と併せて
 - [オントロジーで AI に業務知識を渡す — COA を試してみた](https://zenn.dev/aws_japan/articles/context-ontology-accelerator-deploy) —
   全体像の入門
